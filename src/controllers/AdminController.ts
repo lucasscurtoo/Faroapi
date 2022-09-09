@@ -18,7 +18,7 @@ export function encodeSession(partialSession: SessionUsername): EncodeResult {
   const algorithm: TAlgorithm = "HS512";
   // Determine when the token should expire
   const issued = Date.now();
-  const fifteenMinutesInMs = 60 * 60 * 1000;
+  const fifteenMinutesInMs = 15 * 60 * 1000;
   const expires = issued + fifteenMinutesInMs;
 
   const session: Session = {
@@ -110,7 +110,7 @@ export function requireJwtMiddleware(
     });
 
   const requestHeader = "X-JWT-Token";
-  //const responseHeader = "X-Renewed-JWT-Token";
+  const responseHeader = "X-Renewed-JWT-Token";
   const header = req.header(requestHeader);
 
   if (!header) {
@@ -139,10 +139,8 @@ export function requireJwtMiddleware(
     return;
   }
 
-  /*
   let session: Session;
 
-  
   if (expiration === "grace") {
     // Automatically renew the session and send it back with the response
     const { token, expires, issued } = encodeSession(decodedSession.session);
@@ -156,14 +154,12 @@ export function requireJwtMiddleware(
   } else {
     session = decodedSession.session;
   }
-*/
 
-  /*
   // Set the session on response.locals object for routes to access
   res.locals = {
     ...res.locals,
     session,
-  };*/
+  };
 
   // Request has a valid or renewed session. Call next to continue to the authenticated route handler
   next();
@@ -172,13 +168,13 @@ export function requireJwtMiddleware(
 login.post("/", (req, res) => {
   let session: SessionUsername;
   if (
-    req.body.username === process.env.USER &&
+    req.body.username === process.env.DB_USER &&
     req.body.password === process.env.PASSWORD
   ) {
     session = {
-      username: process.env.USER,
+      username: process.env.DB_USER,
     };
-    res.send(encodeSession(session).token);
+    res.json(encodeSession(session).token);
   } else {
     res.status(401).json({
       ok: false,

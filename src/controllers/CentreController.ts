@@ -3,13 +3,12 @@ const centres = express.Router();
 import dotenv from "dotenv";
 import { CentreDAO } from "../dao/CentreDAO";
 const centreDB = new CentreDAO();
-import { CareerDAO } from "../dao/CareerDAO";
-const careerDB = new CareerDAO();
 import { Centre } from "../model/Centre";
 
 dotenv.config();
 
 centres.post("/", (req, res) => {
+  console.log(req.body);
   const centre: Centre = Object.assign(new Centre(), req.body);
   centreDB.createCentre(centre).then(
     () => {
@@ -28,6 +27,29 @@ centres.get("/", (req, res) => {
     },
     (reason) => {
       res.status(404).send("Centres could no be returned: " + reason);
+    }
+  );
+});
+
+centres.get("/centresName", (req, res) => {
+  centreDB.getAllCentresName().then(
+    (centre) => {
+      res.status(200).json(centre);
+    },
+    (reason) => {
+      res.status(404).send("Centres could no be returned: " + reason);
+    }
+  );
+});
+
+centres.patch("/:id", (req, res) => {
+  const centre: Centre = Object.assign(new Centre(), req.body);
+  centreDB.updateCentre(parseInt(req.params.id), centre).then(
+    (centre) => {
+      res.status(200).json(centre);
+    },
+    (reason) => {
+      res.status(404).send("Centre could not be edited: " + reason);
     }
   );
 });

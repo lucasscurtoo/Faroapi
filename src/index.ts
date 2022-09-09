@@ -1,6 +1,5 @@
 import express from "express";
 const app = express();
-import cors from "cors";
 import { requireJwtMiddleware } from "./controllers/AdminController";
 import login from "./controllers/AdminController";
 import centres from "./controllers/CentreController";
@@ -9,12 +8,10 @@ import careers from "./controllers/CareerController";
 import * as dotenv from "dotenv";
 dotenv.config();
 
-const allowedOrigins = ["http://localhost:7000"];
-const options: cors.CorsOptions = {
-  origin: allowedOrigins,
-};
+const cors = require("cors");
+app.use(cors());
 
-app.use(cors(options)); /* NEW */
+/* NEW */
 app.use(express.json());
 
 app.use(express.json());

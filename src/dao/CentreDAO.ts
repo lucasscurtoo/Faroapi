@@ -3,7 +3,6 @@ import { Centre, Centre_db } from "../model/Centre";
 import { db } from "../database/Database";
 import { Career } from "../model/Career";
 import { CareerDAO } from "./CareerDAO";
-import centre from "../controllers/CentreController";
 const careerDB = new CareerDAO();
 
 export class CentreDAO {
@@ -100,14 +99,14 @@ export class CentreDAO {
 
     return new Promise((resolve, reject) => {
       db.query<OkPacket>(
-        "insert into CENTRE (centre_name, free, latitude, longitude, centre_schedule, phoneNumber) values(?,?,?,?,?,?)",
+        "insert into CENTRE (centre_name, free, latitude, longitude, centre_schedule, phone_number) values(?,?,?,?,?,?)",
         [
           centre.getCentre_name(),
           centre.isFree(),
           centre.getLatitude(),
           centre.getLongitude(),
           centre.getCentre_schedule(),
-          centre.getPhoneNumber(),
+          centre.getPhone_Number(),
         ],
         (err, res) => {
           if (err) reject(err);
@@ -129,6 +128,30 @@ export class CentreDAO {
     });
   }
 
+  updateCentre(id: number, centre: Centre): Promise<Centre> {
+    return new Promise((resolve, reject) => {
+      db.query<OkPacket>(
+        "UPDATE CENTRE set centre_name=?, free=?, latitude=?, longitude=?, centre_schedule=?, phone_number=? where id_centre = ?",
+        [
+          centre.getCentre_name(),
+          centre.isFree(),
+          centre.getLatitude(),
+          centre.getLongitude(),
+          centre.getCentre_schedule(),
+          centre.getPhone_Number(),
+          id,
+        ],
+        (err, res) => {
+          if (err) reject(err);
+          else {
+            this.getCentre(id)
+              .then((centre) => resolve(centre!))
+              .catch(reject);
+          }
+        }
+      );
+    });
+  }
   /*
   update(centre: Centre): Promise<Centre | undefined> {
     return new Promise((resolve, reject) => {

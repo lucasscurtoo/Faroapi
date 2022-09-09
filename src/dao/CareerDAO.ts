@@ -154,8 +154,10 @@ export class CareerDAO {
         "INSERT INTO CENTRE_CAREER (id_centre, id_career) VALUES(?,?)",
         [id_centre, id_career],
         (err, res) => {
-          if (err) reject(err);
-          else resolve(res);
+          if (err) {
+            if (err.code === "ER_DUP_ENTRY") {
+            } else reject(err);
+          } else resolve(res);
         }
       );
     });

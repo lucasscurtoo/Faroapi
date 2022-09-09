@@ -8,7 +8,7 @@ export class Centre {
   private latitude: number;
   private longitude: number;
   private centre_schedule: string;
-  private phoneNumber: number;
+  private phone_number: number;
   private careers: Career[];
 
   constructor(
@@ -18,7 +18,7 @@ export class Centre {
     latitude?: number,
     longitude?: number,
     centre_schedule?: string,
-    phoneNumber?: number,
+    phone_number?: number,
     careers?: Career[]
   ) {
     this.id_centre = id_centre;
@@ -27,7 +27,7 @@ export class Centre {
     this.latitude = latitude;
     this.longitude = longitude;
     this.centre_schedule = centre_schedule;
-    this.phoneNumber = phoneNumber;
+    this.phone_number = phone_number;
     this.careers = careers;
   }
 
@@ -79,12 +79,12 @@ export class Centre {
     this.centre_schedule = centre_schedule;
   }
 
-  public getPhoneNumber(): number {
-    return this.phoneNumber;
+  public getPhone_Number(): number {
+    return this.phone_number;
   }
 
-  public setPhoneNumber(phoneNumber: number): void {
-    this.phoneNumber = phoneNumber;
+  public setPhone_Number(phoneNumber: number): void {
+    this.phone_number = phoneNumber;
   }
 
   public getCareers(): Career[] {
@@ -102,5 +102,5 @@ export interface Centre_db extends RowDataPacket {
   latitude: number;
   longitude: number;
   centre_schedule: string;
-  phoneNumber: number;
+  phone_number: number;
 }
