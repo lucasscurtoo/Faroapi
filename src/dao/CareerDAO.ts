@@ -1,27 +1,27 @@
 import { OkPacket } from "mysql2";
-import career from "../controllers/CareerController";
 import { db } from "../database/Database";
-import { Career, Career_db, keyword_db } from "../model/Career";
+import { Career, CareerDB, KeywordDB } from "../model/Career";
 
 export class CareerDAO {
   getCareerById(careerId: number): Promise<Career | undefined> {
     let career: Career;
     return new Promise((resolve, reject) => {
-      db.query<Career_db[]>(
-        "SELECT * FROM CAREER WHERE id_career = ?",
+      db.query<CareerDB[]>(
+        "SELECT * FROM CAREER WHERE idCareer = ?",
         [careerId],
         (err, res) => {
           if (err) reject(err);
           else {
             if (res?.[0] !== undefined) {
+              let careerR = res?.[0];
               career = new Career(
-                res?.[0].id_career,
-                res?.[0].career_name,
-                res?.[0].career_description,
-                res?.[0].grade,
-                res?.[0].duration
+                careerR.idCareer,
+                careerR.careerName,
+                careerR.careerDescription,
+                careerR.grade,
+                careerR.duration
               );
-              this.getKeywordsByCareer(career.getId_career()).then(
+              this.getKeywordsByCareer(career.getIdCareer()).then(
                 (keywords) => {
                   career.setKeywords(keywords);
                   resolve(career);
@@ -38,11 +38,11 @@ export class CareerDAO {
 
   getAllCareers(): Promise<Career[]> {
     return new Promise((resolve, reject) => {
-      db.query<Career_db[]>("select * from CAREER", async (err, res) => {
+      db.query<CareerDB[]>("select * from CAREER", async (err, res) => {
         if (err) reject(err);
         else {
           const careers = await Promise.all(
-            res.map((career) => this.getCareerById(career.id_career))
+            res.map((career) => this.getCareerById(career.idCareer))
           );
           resolve(careers);
         }
@@ -52,14 +52,14 @@ export class CareerDAO {
 
   getCareerByName(careerName: string): Promise<Career> {
     return new Promise((resolve, reject) => {
-      db.query<Career_db[]>(
-        "SELECT * FROM CAREER WHERE career_name = ?",
+      db.query<CareerDB[]>(
+        "SELECT * FROM CAREER WHERE careerName = ?",
         [careerName],
         (err, res) => {
           if (err) reject(err);
           else {
-            if (res?.[0].career_name !== undefined) {
-              this.getCareerById(res?.[0].id_career).then((career) => {
+            if (res?.[0].careerName !== undefined) {
+              this.getCareerById(res?.[0].idCareer).then((career) => {
                 resolve(career);
               });
             } else {
@@ -71,11 +71,29 @@ export class CareerDAO {
     });
   }
 
+  getAllCentresName(): Promise<Career[]> {
+    let careers: Array<Career> = [];
+    return new Promise((resolve, reject) => {
+      db.query<CareerDB[]>(
+        "SELECT idCareer, centreName FROM CAREER",
+        (err, res) => {
+          if (err) reject(err);
+          else {
+            res.forEach((car) => {
+              careers.push(new Career(car.idCareer, car.careerName));
+            });
+            resolve(careers);
+          }
+        }
+      );
+    });
+  }
+
   getCareersByCentre(centreId: number): Promise<Career[]> {
     let careers: Array<Career> = [];
     return new Promise((resolve, reject) => {
-      db.query<Career_db[]>(
-        "select * from CAREER natural join CENTRE_CAREER where id_centre = ?",
+      db.query<CareerDB[]>(
+        "select * from CAREER natural join CENTRE_CAREER where idCentre = ?",
         [centreId],
         (err, res) => {
           if (err) reject(err);
@@ -83,9 +101,9 @@ export class CareerDAO {
             res.forEach((car) => {
               careers.push(
                 new Career(
-                  car.id_career,
-                  car.career_name,
-                  car.career_description,
+                  car.idCareer,
+                  car.careerName,
+                  car.careerDescription,
                   car.grade,
                   car.duration
                 )
@@ -101,8 +119,8 @@ export class CareerDAO {
   getKeywordsByCareer(careerId: number): Promise<string[]> {
     let keywords: Array<string> = [];
     return new Promise((resolve, reject) => {
-      db.query<keyword_db[]>(
-        "select * from KEYWORD natural join CAREER_KEYWORD where id_career= ?",
+      db.query<KeywordDB[]>(
+        "select * from KEYWORD natural join CAREER_KEYWORD where idCareer= ?",
         [careerId],
         (err, res) => {
           if (err) reject(err);
@@ -117,29 +135,11 @@ export class CareerDAO {
     });
   }
 
-  /*
-  getCareerByCentreName(centreName: string): Promise<Career_db | undefined> {
-    let careers: Career[];
-    return new Promise((resolve, reject) => {
-      db.query<OkPacket>(
-        "select * from CAREER natural join CENTRE_CAREER where centre_name = ?",
-        [centreName],
-        (err, res) => {
-          if (err) reject(err);
-          else resolve(res.forEach((obj)=>{
-            careers.push(Object.assign(new Career(), obj));
-          }));
-        }
-      );
-    });
-  }
-*/
-
-  vinculateCareerKeyword(keyword: string, id_career: number) {
+  vinculateCareerKeyword(keyword: string, idCareer: number) {
     return new Promise((resolve, reject) => {
       db.query<OkPacket>(
         "call vin_career_keyword(?,?)",
-        [keyword, id_career],
+        [keyword, idCareer],
         (err, res) => {
           if (err) reject(err);
           else resolve(res);
@@ -148,11 +148,11 @@ export class CareerDAO {
     });
   }
 
-  vinculateCentreCareer(id_centre: number, id_career: number) {
+  vinculateCentreCareer(idCentre: number, idCareer: number) {
     return new Promise((resolve, reject) => {
       db.query<OkPacket>(
-        "INSERT INTO CENTRE_CAREER (id_centre, id_career) VALUES(?,?)",
-        [id_centre, id_career],
+        "INSERT INTO CENTRE_CAREER (idCentre, idCareer) VALUES(?,?)",
+        [idCentre, idCareer],
         (err, res) => {
           if (err) {
             if (err.code === "ER_DUP_ENTRY") {
@@ -167,19 +167,19 @@ export class CareerDAO {
     return new Promise((resolve, reject) => {
       careers.forEach((career) => {
         db.query<OkPacket>(
-          "INSERT INTO CAREER (career_name, career_description, grade, duration) VALUES(?,?,?,?)",
+          "INSERT INTO CAREER (careerName, careerDescription, grade, duration) VALUES(?,?,?,?)",
           [
-            career.getCareer_name(),
-            career.getCareer_description(),
+            career.getCareerName(),
+            career.getCareerDescription(),
             career.getGrade(),
             career.getDuration(),
           ],
           (err, res) => {
             if (err) {
               if (err.code === "ER_DUP_ENTRY") {
-                this.getCareerByName(career.getCareer_name())
+                this.getCareerByName(career.getCareerName())
                   .then((c) => {
-                    this.vinculateCentreCareer(centreId, c.getId_career());
+                    this.vinculateCentreCareer(centreId, c.getIdCareer());
                   })
                   .then(() => resolve(res));
               } else {

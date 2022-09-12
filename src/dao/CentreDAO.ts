@@ -1,5 +1,5 @@
 import { OkPacket } from "mysql2";
-import { Centre, Centre_db } from "../model/Centre";
+import { Centre, CentreDB } from "../model/Centre";
 import { db } from "../database/Database";
 import { Career } from "../model/Career";
 import { CareerDAO } from "./CareerDAO";
@@ -9,23 +9,25 @@ export class CentreDAO {
   getCentre(id: number): Promise<Centre | undefined> {
     let centre: Centre;
     return new Promise((resolve, reject) => {
-      db.query<Centre_db[]>(
+      db.query<CentreDB[]>(
         "SELECT * FROM CENTRE WHERE id_centre = ?",
         [id],
         (err, res) => {
           if (err) reject(err);
           else {
             if (res?.[0] !== undefined) {
+              let centreData = res?.[0];
               centre = new Centre(
-                res?.[0].id_centre,
-                res?.[0].centre_name,
-                res?.[0].free,
-                res?.[0].latitude,
-                res?.[0].longitude,
-                res?.[0].centre_schedule
+                centreData.id_centre,
+                centreData.centre_name,
+                Boolean(centreData.free),
+                centreData.adress,
+                centreData.latitude,
+                centreData.longitude,
+                centreData.centre_schedule
               );
               careerDB
-                .getCareersByCentre(centre.getId_centre())
+                .getCareersByCentre(centre.getIdCentre())
                 .then((careers) => {
                   centre.setCareers(careers);
                   resolve(centre);
@@ -41,7 +43,7 @@ export class CentreDAO {
 
   getAllCentres(): Promise<Centre[]> {
     return new Promise((resolve, reject) => {
-      db.query<Centre_db[]>("SELECT * FROM CENTRE", async (err, res) => {
+      db.query<CentreDB[]>("SELECT * FROM CENTRE", async (err, res) => {
         if (err) reject(err);
         else {
           const centres = await Promise.all(
@@ -56,7 +58,7 @@ export class CentreDAO {
   getAllCentresName(): Promise<Centre[]> {
     let centres: Array<Centre> = [];
     return new Promise((resolve, reject) => {
-      db.query<Centre_db[]>(
+      db.query<CentreDB[]>(
         "SELECT id_centre, centre_name FROM CENTRE",
         (err, res) => {
           if (err) reject(err);
@@ -73,7 +75,7 @@ export class CentreDAO {
 
   getCentreByName(centreName: string): Promise<Centre | undefined> {
     return new Promise((resolve, reject) => {
-      db.query<Centre_db[]>(
+      db.query<CentreDB[]>(
         "select * from CENTRE natural join CAREER where centre_name = ?",
         [centreName],
         (err, res) => {
@@ -99,14 +101,15 @@ export class CentreDAO {
 
     return new Promise((resolve, reject) => {
       db.query<OkPacket>(
-        "insert into CENTRE (centre_name, free, latitude, longitude, centre_schedule, phone_number) values(?,?,?,?,?,?)",
+        "insert into CENTRE (centre_name, free, adress, latitude, longitude, centre_schedule, phone_number) values(?,?,?,?,?,?,?)",
         [
-          centre.getCentre_name(),
+          centre.getCentreName(),
           centre.isFree(),
+          centre.getAdress(),
           centre.getLatitude(),
           centre.getLongitude(),
-          centre.getCentre_schedule(),
-          centre.getPhone_Number(),
+          centre.getCentreSchedule(),
+          centre.getPhoneNumber(),
         ],
         (err, res) => {
           if (err) reject(err);
@@ -133,12 +136,13 @@ export class CentreDAO {
       db.query<OkPacket>(
         "UPDATE CENTRE set centre_name=?, free=?, latitude=?, longitude=?, centre_schedule=?, phone_number=? where id_centre = ?",
         [
-          centre.getCentre_name(),
-          centre.isFree(),
+          centre.getCentreName(),
+          Boolean(centre.isFree()),
+          centre.getAdress(),
           centre.getLatitude(),
           centre.getLongitude(),
-          centre.getCentre_schedule(),
-          centre.getPhone_Number(),
+          centre.getCentreSchedule(),
+          centre.getPhoneNumber(),
           id,
         ],
         (err, res) => {

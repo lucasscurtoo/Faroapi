@@ -1,50 +1,35 @@
 import { RowDataPacket } from "mysql2";
 
 export class Career {
-  private id_career: number;
-  private career_name: string;
-  private career_description: string;
+  private idCareer: number;
+  private careerName: string;
+  private careerDescription: string;
   private grade: string;
   private duration: string;
   private keywords: string[];
 
-  constructor(
-    id_career?: number,
-    career_name?: string,
-    career_description?: string,
-    grade?: string,
-    duration?: string,
-    keywords?: string[]
-  ) {
-    this.id_career = id_career;
-    this.career_name = career_name;
-    this.career_description = career_description;
-    this.grade = grade;
-    this.duration = duration;
-    this.keywords = keywords;
-  }
-  public getId_career(): number {
-    return this.id_career;
+  public getIdCareer(): number {
+    return this.idCareer;
   }
 
-  public setId_career(id_career: number): void {
-    this.id_career = id_career;
+  public setIdCareer(idCareer: number): void {
+    this.idCareer = idCareer;
   }
 
-  public getCareer_name(): string {
-    return this.career_name;
+  public getCareerName(): string {
+    return this.careerName;
   }
 
-  public setCareer_name(career_name: string): void {
-    this.career_name = career_name;
+  public setCareerName(careerName: string): void {
+    this.careerName = careerName;
   }
 
-  public getCareer_description(): string {
-    return this.career_description;
+  public getCareerDescription(): string {
+    return this.careerDescription;
   }
 
-  public setCareer_description(career_description: string): void {
-    this.career_description = career_description;
+  public setCareerDescription(careerDescription: string): void {
+    this.careerDescription = careerDescription;
   }
 
   public getGrade(): string {
@@ -70,17 +55,33 @@ export class Career {
   public setKeywords(keywords: string[]): void {
     this.keywords = keywords;
   }
+
+  constructor(
+    idCareer?: number,
+    careerName?: string,
+    careerDescription?: string,
+    grade?: string,
+    duration?: string,
+    keywords?: string[]
+  ) {
+    this.idCareer = idCareer;
+    this.careerName = careerName;
+    this.careerDescription = careerDescription;
+    this.grade = grade;
+    this.duration = duration;
+    this.keywords = keywords;
+  }
 }
 
-export interface Career_db extends RowDataPacket {
-  id_career?: number;
-  career_name: string;
-  career_description: string;
+export interface CareerDB extends RowDataPacket {
+  idCareer?: number;
+  careerName: string;
+  careerDescription: string;
   grade: string;
   duration: string;
 }
 
-export interface keyword_db extends RowDataPacket {
-  id_keyword: number;
+export interface KeywordDB extends RowDataPacket {
+  idKeyword: number;
   keyword: string;
 }

@@ -2,49 +2,30 @@ import { Career } from "./Career";
 import { RowDataPacket } from "mysql2";
 
 export class Centre {
-  private id_centre: number;
-  private centre_name: string;
+  private idCentre: number;
+  private centreName: string;
   private free: boolean;
+  private adress: string;
   private latitude: number;
   private longitude: number;
-  private centre_schedule: string;
-  private phone_number: number;
+  private centreSchedule: string;
+  private phoneNumber: number;
   private careers: Career[];
 
-  constructor(
-    id_centre?: number,
-    centre_name?: string,
-    free?: boolean,
-    latitude?: number,
-    longitude?: number,
-    centre_schedule?: string,
-    phone_number?: number,
-    careers?: Career[]
-  ) {
-    this.id_centre = id_centre;
-    this.centre_name = centre_name;
-    this.free = free;
-    this.latitude = latitude;
-    this.longitude = longitude;
-    this.centre_schedule = centre_schedule;
-    this.phone_number = phone_number;
-    this.careers = careers;
+  public getIdCentre(): number {
+    return this.idCentre;
   }
 
-  public getId_centre(): number {
-    return this.id_centre;
+  public setIdCentre(idCentre: number): void {
+    this.idCentre = idCentre;
   }
 
-  public setId_centre(id_centre: number): void {
-    this.id_centre = id_centre;
+  public getCentreName(): string {
+    return this.centreName;
   }
 
-  public getCentre_name(): string {
-    return this.centre_name;
-  }
-
-  public setCentre_name(centre_name: string): void {
-    this.centre_name = centre_name;
+  public setCentreName(centreName: string): void {
+    this.centreName = centreName;
   }
 
   public isFree(): boolean {
@@ -53,6 +34,14 @@ export class Centre {
 
   public setFree(free: boolean): void {
     this.free = free;
+  }
+
+  public getAdress(): string {
+    return this.adress;
+  }
+
+  public setAdress(adress: string): void {
+    this.adress = adress;
   }
 
   public getLatitude(): number {
@@ -71,20 +60,20 @@ export class Centre {
     this.longitude = longitude;
   }
 
-  public getCentre_schedule(): string {
-    return this.centre_schedule;
+  public getCentreSchedule(): string {
+    return this.centreSchedule;
   }
 
-  public setCentre_schedule(centre_schedule: string): void {
-    this.centre_schedule = centre_schedule;
+  public setCentreSchedule(centreSchedule: string): void {
+    this.centreSchedule = centreSchedule;
   }
 
-  public getPhone_Number(): number {
-    return this.phone_number;
+  public getPhoneNumber(): number {
+    return this.phoneNumber;
   }
 
-  public setPhone_Number(phoneNumber: number): void {
-    this.phone_number = phoneNumber;
+  public setPhoneNumber(phoneNumber: number): void {
+    this.phoneNumber = phoneNumber;
   }
 
   public getCareers(): Career[] {
@@ -94,13 +83,36 @@ export class Centre {
   public setCareers(careers: Career[]): void {
     this.careers = careers;
   }
+
+  constructor(
+    idCentre?: number,
+    centreName?: string,
+    free?: boolean,
+    adress?: string,
+    latitude?: number,
+    longitude?: number,
+    centreSchedule?: string,
+    phoneNumber?: number,
+    careers?: Career[]
+  ) {
+    this.idCentre = idCentre;
+    this.centreName = centreName;
+    this.free = free;
+    this.adress = adress;
+    this.latitude = latitude;
+    this.longitude = longitude;
+    this.centreSchedule = centreSchedule;
+    this.phoneNumber = phoneNumber;
+    this.careers = careers;
+  }
 }
-export interface Centre_db extends RowDataPacket {
-  id_centre?: number;
-  centre_name: string;
+export interface CentreDB extends RowDataPacket {
+  idCentre?: number;
+  centreName: string;
   free: boolean;
+  adress: string;
   latitude: number;
   longitude: number;
-  centre_schedule: string;
-  phone_number: number;
+  centreSchedule: string;
+  phoneNumber: number;
 }
