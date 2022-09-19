@@ -11,49 +11,59 @@ careers.get("/", (req, res) => {
       res.status(200).json(careers);
     },
     (reason) => {
-      res.status(404).send("Centres could not be returned " + reason);
-    }
-  );
-});
-
-careers.get("/:careerName", (req, res) => {
-  careerDB.getCareerByName(req.params.careerName).then(
-    (career) => {
-      res.status(200).json(career);
-    },
-    (reason) => {
-      res.status(404).send("Centres could not be returned " + reason);
+      res.status(404).send("Careers could not be returned " + reason);
     }
   );
 });
 
 careers.get("/career", (req, res) => {
-  var query = require("url").parse(req.url, true).query;
+  const query = require("url").parse(req.url, true).query;
 
-  if (query.name !== undefined && query.id === undefined) {
-    careerDB.getCareerByName(query.name).then(
-      (centre) => {
-        res.status(200).json(centre);
-      },
-      (reason) => {
-        res.status(404).send("Career could no be returned: " + reason);
-      }
-    );
-  } else if (query.id !== undefined && query.name === undefined) {
+  const byId = query.id ? true : false;
+  const byName = query.name ? true : false;
+  const byCentre = query.centreId ? true : false;
+
+  if (byId && !byName) {
     careerDB.getCareerById(query.id).then(
-      (centre) => {
-        res.status(200).json(centre);
+      (career) => {
+        res.status(200).json(career);
       },
       (reason) => {
         res.status(404).send("Career could no be returned: " + reason);
       }
     );
-  } else if (
-    (query.name !== undefined && query.id !== undefined) ||
-    (query.name === undefined && query.id === undefined)
-  ) {
-    res.status(400).send("Must send either an id or a name");
+  } else if (byName && !byId) {
+    careerDB.getCareerByName(query.name).then(
+      (career) => {
+        res.status(200).json(career);
+      },
+      (reason) => {
+        res.status(404).send("Career could no be returned: " + reason);
+      }
+    );
+  } else if (byCentre) {
+    careerDB.getCareersByCentre(query.centreId).then(
+      (career) => {
+        res.status(200).json(career);
+      },
+      (reason) => {
+        res.status(404).send("Career could no be returned: " + reason);
+      }
+    );
+  } else {
+    res.status(400).send("Must send either an id, a name or a centre");
   }
+});
+
+careers.delete("/:id", (req, res) => {
+  careerDB.deleteCareer(parseInt(req.params.id, 10)).then(
+    (response) => {
+      res.status(200).send("Career was succesfully deleted");
+    },
+    (reason) => {
+      res.status(404).send("Career could not be deleted: " + reason);
+    }
+  );
 });
 
 export default careers;

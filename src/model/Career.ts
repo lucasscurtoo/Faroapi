@@ -4,7 +4,7 @@ export class Career {
   private idCareer: number;
   private careerName: string;
   private careerDescription: string;
-  private grade: string;
+  private degree: string;
   private duration: string;
   private keywords: string[];
 
@@ -32,12 +32,12 @@ export class Career {
     this.careerDescription = careerDescription;
   }
 
-  public getGrade(): string {
-    return this.grade;
+  public getDegree(): string {
+    return this.degree;
   }
 
-  public setGrade(grade: string): void {
-    this.grade = grade;
+  public setDegree(degree: string): void {
+    this.degree = degree;
   }
 
   public getDuration(): string {
@@ -60,14 +60,14 @@ export class Career {
     idCareer?: number,
     careerName?: string,
     careerDescription?: string,
-    grade?: string,
+    degree?: string,
     duration?: string,
     keywords?: string[]
   ) {
     this.idCareer = idCareer;
     this.careerName = careerName;
     this.careerDescription = careerDescription;
-    this.grade = grade;
+    this.degree = degree;
     this.duration = duration;
     this.keywords = keywords;
   }
@@ -77,11 +77,6 @@ export interface CareerDB extends RowDataPacket {
   idCareer?: number;
   careerName: string;
   careerDescription: string;
-  grade: string;
+  degree: string;
   duration: string;
-}
-
-export interface KeywordDB extends RowDataPacket {
-  idKeyword: number;
-  keyword: string;
 }
