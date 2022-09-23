@@ -1,6 +1,7 @@
 import { OkPacket } from "mysql2";
 import { db } from "../databaseCon/Database";
 import { Career, CareerDB } from "../model/Career";
+import { selectCount } from "../model/Generics";
 import { KeywordDAO } from "./KeywordDAO";
 const keywordDB = new KeywordDAO();
 
@@ -109,7 +110,7 @@ export class CareerDAO {
               await Promise.all(
                 res.map((career) => this.getCareerById(career.idCareer))
               ).then((careers) => resolve(careers));
-            }
+            } else reject(Error("No_careers"));
           }
         }
       );
@@ -126,6 +127,27 @@ export class CareerDAO {
           else resolve(res);
         }
       );
+    });
+  }
+
+  clearCareers(idCentre: number): Promise<selectCount[]> {
+    return new Promise(async (resolve, reject) => {
+      const careers = await this.getAllCareers();
+      careers.forEach((career) => {
+        db.query<selectCount[]>(
+          "select count(idCareer) as countResult from CENTRE_CAREER where idCareer=?",
+          [career.getIdCareer()],
+          async (err, res) => {
+            if (err) reject(err);
+            else {
+              if (res?.[0].countResult == 0) {
+                await this.deleteCareer(career.getIdCareer(), idCentre);
+              }
+              resolve(res);
+            }
+          }
+        );
+      });
     });
   }
 
@@ -174,17 +196,21 @@ export class CareerDAO {
     });
   }
 
-  deleteCareer(idCareer: number): Promise<number> {
+  deleteCareer(idCareer: number, idCentre: number): Promise<number> {
     return new Promise((resolve, reject) => {
-      db.query<OkPacket>("call deleteCareer(?)", [idCareer], (err, res) => {
-        if (err) reject(err);
-        else {
-          res.affectedRows === 0
-            ? reject(Error("Career not found"))
-            : keywordDB.clearKeywords();
+      db.query<OkPacket>(
+        "call DBFiller_Career_DesvinculateCentre(?,?)",
+        [idCareer, idCentre],
+        (err, res) => {
+          if (err) reject(err);
+          else {
+            res.affectedRows === 0
+              ? reject(Error("Centre or careeer not found"))
+              : keywordDB.clearKeywords();
+            resolve(res.affectedRows);
+          }
         }
-        resolve(res.affectedRows);
-      });
+      );
     });
   }
 }

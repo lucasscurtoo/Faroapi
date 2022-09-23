@@ -20,9 +20,11 @@ centres.post("/", (req, res) => {
   );
 });
 
-centres.patch("/:idCentre", (req, res) => {
+centres.patch("/centre", (req, res) => {
+  const query = require("url").parse(req.url, true).query;
+
   const centre: Centre = Object.assign(new Centre(), req.body);
-  centreDB.updateCentre(parseInt(req.params.idCentre, 10), centre).then(
+  centreDB.updateCentre(query.id, centre).then(
     () => {
       res.status(200).send("Centre succesfully edited");
     },
@@ -55,12 +57,14 @@ centres.get("/centresName", (req, res) => {
 });
 
 centres.get("/centre", (req, res) => {
+  console.log("HOLA?");
+
   const query = require("url").parse(req.url, true).query;
   const byId = query.id ? true : false;
   const byName = query.name ? true : false;
   const byCareer = query.idCareer ? true : false;
 
-  if (byName && !byId) {
+  if (byName && !byId && !byCareer) {
     centreDB.getCentreByName(query.name).then(
       (centre) => {
         res.status(200).json(centre);
@@ -69,7 +73,8 @@ centres.get("/centre", (req, res) => {
         res.status(404).send("Centre could no be returned: " + reason);
       }
     );
-  } else if (byId && !byName) {
+  } else if (byId && !byName && !byCareer) {
+    console.log("AIGHT");
     centreDB.getCentre(query.id).then(
       (centre) => {
         res.status(200).json(centre);
@@ -78,7 +83,7 @@ centres.get("/centre", (req, res) => {
         res.status(404).send("Centre could no be returned: " + reason);
       }
     );
-  } else if (byCareer) {
+  } else if (byCareer && !byName && !byId) {
     centreDB.getCentresByCareer(query.idCareer).then(
       (centres) => {
         res.status(200).json(centres);
@@ -88,12 +93,14 @@ centres.get("/centre", (req, res) => {
       }
     );
   } else {
-    res.status(400).send("Must send either an id or a name");
+    res.status(400).send("Must send either an id, a name, or a career");
   }
 });
 
 centres.delete("/:id", (req, res) => {
-  centreDB.deleteCentre(parseInt(req.params.id, 10)).then(
+  const query = require("url").parse(req.url, true).query;
+
+  centreDB.deleteCentre(query.id).then(
     () => {
       res.status(200).send("Centre was succesfully deleted");
     },

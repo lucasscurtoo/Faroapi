@@ -9,7 +9,7 @@ export class Centre {
   private addressNumber: number;
   private latitude: number;
   private longitude: number;
-  private centreSchedule: string[];
+  private centreSchedules: string[];
   private schoolarLevel: string;
   private phoneNumber: number;
   private careers: Career[];
@@ -22,7 +22,7 @@ export class Centre {
     addressNumber?: number,
     latitude?: number,
     longitude?: number,
-    centreSchedule?: string[],
+    centreSchedules?: string[],
     schoolarLevel?: string,
     phoneNumber?: number,
     careers?: Career[]
@@ -34,7 +34,7 @@ export class Centre {
     this.addressNumber = addressNumber;
     this.latitude = latitude;
     this.longitude = longitude;
-    this.centreSchedule = centreSchedule;
+    this.centreSchedules = centreSchedules;
     this.schoolarLevel = schoolarLevel;
     this.phoneNumber = phoneNumber;
     this.careers = careers;
@@ -96,12 +96,12 @@ export class Centre {
     this.longitude = longitude;
   }
 
-  public getCentreSchedule(): string[] {
-    return this.centreSchedule;
+  public getCentreSchedules(): string[] {
+    return this.centreSchedules;
   }
 
-  public setCentreSchedule(centreSchedule: string[]): void {
-    this.centreSchedule = centreSchedule;
+  public setCentreSchedules(centreSchedules: string[]): void {
+    this.centreSchedules = centreSchedules;
   }
 
   public getSchoolarLevel(): string {
@@ -147,4 +147,5 @@ export interface CentreDB extends RowDataPacket {
   latitude: number;
   longitude: number;
   phoneNumber: number;
+  centreSchedules: string[];
 }

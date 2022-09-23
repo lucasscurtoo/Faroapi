@@ -8,6 +8,8 @@ import {
 import { db } from "../databaseCon/Database";
 import { Career } from "../model/Career";
 import { CareerDAO } from "./CareerDAO";
+import { resolve } from "path";
+import { selectCount } from "../model/Generics";
 const careerDB = new CareerDAO();
 
 /*-
@@ -26,7 +28,7 @@ export class CentreDAO {
       /*mysql2 driver requires classes that extend RowDataPacket*/
       db.query<CentreDB[]>(
         /*Raw mysql query*/
-        "SELECT * FROM CENTRE WHERE idCentre = ?",
+        "select idCentre, centreName, free, addressStreet, addressNumber, latitude, longitude, phoneNumber, schoolarLevel, group_concat(centreSchedule) as centreSchedules from centre natural left join centre_schedules natural left join schoolarlevel natural left join SCHEDULES where idCentre=?",
         /*Every sent paramether will match every '?' mark*/
         [id],
         /*callback*/
@@ -35,7 +37,7 @@ export class CentreDAO {
           if (err) reject(err);
           else {
             /*if something was returned from database*/
-            if (res?.[0] !== undefined) {
+            if (res?.[0].centreName !== null) {
               /*Just an assistant variable*/
               const centreData = res?.[0];
               /*Create a new centre (type Centre)*/
@@ -47,7 +49,7 @@ export class CentreDAO {
                 centreData.addressNumber,
                 centreData.latitude,
                 centreData.longitude,
-                centreData.centreSchedule,
+                centreData.centreSchedules,
                 centreData.schoolarLevel,
                 centreData.phoneNumber
               );
@@ -56,14 +58,8 @@ export class CentreDAO {
                 .getCareersByCentre(centre.getIdCentre())
                 .then((careers) => {
                   centre.setCareers(careers);
-                });
-              /*then call method getSchedules in order to set the schedules of the centre*/
-              await this.getCentreSchedules(centreData.idCentre).then((sch) =>
-                centre.setCentreSchedule(sch)
-              );
-              await this.getCentreLevels(centreData.idCentre).then((lev) => {
-                centre.setSchoolarLevel(lev);
-              });
+                })
+                .catch((err) => resolve(centre));
               resolve(centre);
             } else {
               reject("Centre not found");
@@ -186,23 +182,10 @@ export class CentreDAO {
     });
   }
 
-  vinculateCentreSchedule(idCentre: number, schedule: string) {
-    return new Promise((resolve, reject) => {
-      db.query<OkPacket>(
-        "call vin_centre_schedule(?,?)",
-        [idCentre, schedule],
-        (err, res) => {
-          if (err) reject(err);
-          else resolve(res);
-        }
-      );
-    });
-  }
-
   vinculateCentreSchoolarLevel(idCentre: number, scholarLevel: string) {
     return new Promise((resolve, reject) => {
       db.query<OkPacket>(
-        "call vin_schoolarLevel(?,?)",
+        "call DBFiller_Centre_VinculateSchoolarLevel(?,?)",
         [idCentre, scholarLevel],
         (err, res) => {
           if (err) reject(err);
@@ -216,8 +199,6 @@ export class CentreDAO {
     const centreCareers = centre.getCareers().map((career) => {
       return Object.assign(new Career(), career);
     });
-
-    const centreSchedules = centre.getCentreSchedule();
 
     return new Promise((resolve, reject) => {
       db.query<OkPacket>(
@@ -235,14 +216,16 @@ export class CentreDAO {
           if (err) reject(err);
           else {
             /*For every given schedule vinculate it to the centre*/
-            centreSchedules.forEach(async (sch) => {
-              await this.vinculateCentreSchedule(res.insertId, sch);
-            });
+            await this.vinculateCentreSchedules(
+              res.insertId,
+              centre.getCentreSchedules()
+            );
+            /*For the given schoolar level, vinculate it to the centre*/
             await this.vinculateCentreSchoolarLevel(
               res.insertId,
               centre.getSchoolarLevel()
             );
-            /*For every given schedule vinculate it to the centre*/
+            /*For every given career vinculate it to the centre*/
             if (centreCareers.length > 0) {
               await careerDB
                 .createCareer(centreCareers, res.insertId)
@@ -264,10 +247,51 @@ export class CentreDAO {
     });
   }
 
+  deleteSchedules(idCentre: number) {
+    return new Promise((resolve, reject) => {
+      db.query<OkPacket>(
+        "delete FROM CENTRE_SCHEDULES where idCentre=?",
+        [idCentre],
+        (err, res) => {
+          if (err) reject(err);
+          else {
+            console.log("delete schedules");
+            resolve(res);
+          }
+        }
+      );
+    });
+  }
+
+  vinculateCentreSchedules(idCentre: number, schedule: string[]) {
+    return new Promise((resolve, reject) => {
+      schedule.forEach((sch) => {
+        db.query<OkPacket>(
+          "call DBFiller_Centre_VinculateSchedules(?,?)",
+          [idCentre, sch],
+          (err, res) => {
+            if (err) reject(err);
+            else resolve(res);
+          }
+        );
+      });
+    });
+  }
+
+  updateSchedules(schedules: string[], idCentre: number) {
+    return new Promise((resolve, reject) => {
+      this.deleteSchedules(idCentre).then(() => {
+        this.vinculateCentreSchedules(idCentre, schedules).then((res) => {
+          resolve(res);
+        });
+      });
+    });
+  }
+
   updateCentre(id: number, centre: Centre): Promise<Centre> {
     return new Promise((resolve, reject) => {
       db.query<OkPacket>(
-        "UPDATE CENTRE set centreName=?, free=?, addressStreet=?, addressNumber=?, latitude=?, longitude=?, centreSchedule=?, schoolarLevel=?, phoneNumber=? where idCentre = ?",
+        "UPDATE CENTRE set centreName=?, free=?, addressStreet=?, addressNumber=?, latitude=?, longitude=?, phoneNumber=? where idCentre = ?",
         [
           centre.getCentreName(),
           centre.isFree(),
@@ -275,14 +299,13 @@ export class CentreDAO {
           centre.getAddressNumber(),
           centre.getLatitude(),
           centre.getLongitude(),
-          //centre.getCentreSchedule(),
-          //centre.getSchoolarLevel(),
           centre.getPhoneNumber(),
           id,
         ],
-        (err, res) => {
+        async (err, res) => {
           if (err) reject(err);
           else {
+            await this.updateSchedules(centre.getCentreSchedules(), id);
             this.getCentre(id)
               .then((centre) => resolve(centre!))
               .catch(reject);
@@ -294,14 +317,23 @@ export class CentreDAO {
 
   deleteCentre(idCentre: number): Promise<number> {
     return new Promise((resolve, reject) => {
-      db.query<OkPacket>("call deleteCentre(?)", [idCentre], (err, res) => {
-        if (err) reject(err);
-        else {
-          res.affectedRows === 0
-            ? reject(Error("Centre not found"))
-            : resolve(res.affectedRows);
+      db.query<OkPacket>(
+        "call DBFiller_Centre_Delete(?)",
+        [idCentre],
+        async (err, res) => {
+          if (err) reject(err);
+          else {
+            console.log("Like, it was deleted, but");
+            if (res.affectedRows === 0) reject(Error("Centre not found"));
+            else {
+              console.log("Delete centre succesfull");
+              await this.deleteSchedules(idCentre);
+              await careerDB.clearCareers(idCentre);
+              resolve(res.affectedRows);
+            }
+          }
         }
-      });
+      );
     });
   }
 }
